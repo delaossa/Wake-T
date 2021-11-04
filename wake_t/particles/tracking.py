@@ -9,20 +9,28 @@ from wake_t.physics_models.beam_optics.transfer_matrices import (
 )
 
 
-def runge_kutta_4(beam_matrix, WF, t0, dt, iterations):
+def runge_kutta_4(beam_matrix, WF, t0, dt, iterations, z_injection=None):
     for i in np.arange(iterations):
-        t = t0 + i*dt
-        A = equations_of_motion(beam_matrix, t, WF, dt)
-        B = equations_of_motion(beam_matrix + A/2., t+dt/2., WF, dt)
-        C = equations_of_motion(beam_matrix + B/2., t+dt/2., WF, dt)
-        D = equations_of_motion(beam_matrix + C, t+dt, WF, dt)
+        t = t0 + i * dt
+        A = equations_of_motion(beam_matrix, t, WF, dt,
+                                z_injection)
+        B = equations_of_motion(beam_matrix + A / 2., t + dt / 2., WF, dt,
+                                z_injection)
+        C = equations_of_motion(beam_matrix + B / 2., t + dt / 2., WF, dt,
+                                z_injection)
+        D = equations_of_motion(beam_matrix + C, t + dt, WF, dt,
+                                z_injection)
         update_beam_matrix(beam_matrix, A, B, C, D)
     return beam_matrix
 
 
-def equations_of_motion(beam_matrix, t, WF, dt):
-    K = -ct.e/(ct.m_e*ct.c)
+def equations_of_motion(beam_matrix, t, WF, dt, z_injection=None):
+    K = -ct.e / (ct.m_e * ct.c)
     x, px, y, py, xi, pz, q = beam_matrix
+    if z_injection is not None:
+        z = xi + ct.c * t
+        if max(z) <= z_injection:
+            K = 0.
     wx = K * WF.Wx(x, y, xi, px, py, pz, q, t)
     wy = K * WF.Wy(x, y, xi, px, py, pz, q, t)
     wz = K * WF.Wz(x, y, xi, px, py, pz, q, t)
@@ -34,7 +42,7 @@ def update_beam_matrix(bm, A, B, C, D):
     inv_6 = 1 / 6.
     for i in prange(bm.shape[0]):
         for j in prange(bm.shape[1]):
-            bm[i, j] += (A[i, j] + 2.*(B[i, j] + C[i, j]) + D[i, j]) * inv_6
+            bm[i, j] += (A[i, j] + 2. * (B[i, j] + C[i, j]) + D[i, j]) * inv_6
 
 
 @njit()

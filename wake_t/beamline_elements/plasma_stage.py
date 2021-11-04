@@ -272,6 +272,8 @@ class PlasmaStage():
         """ Track beam using Runge-Kutta method """
         # Get 6D matrix
         mat = bunch.get_6D_matrix_with_charge()
+        # injection position
+        z_injection = bunch.z_injection
         # Plasma length in time
         t_final = self.length/ct.c
         t_step = t_final/self.n_out
@@ -297,8 +299,8 @@ class PlasmaStage():
             # if auto_update_fields:
             #    self.wakefield.check_if_update_fields(s*t_step)
             bunch_matrix = runge_kutta_4(
-                mat, WF=self.wakefield, t0=s*t_step,  dt=dt_adjusted,
-                iterations=it_per_step)
+                mat, WF=self.wakefield, t0=s*t_step, dt=dt_adjusted,
+                iterations=it_per_step, z_injection=z_injection)
             x, px, y, py, xi, pz, q = copy(bunch_matrix)
             new_prop_dist = bunch.prop_distance + (s+1)*t_step*ct.c
             bunch_list.append(
