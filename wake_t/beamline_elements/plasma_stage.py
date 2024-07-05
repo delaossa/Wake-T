@@ -112,8 +112,9 @@ class PlasmaStage(FieldElement):
         if self.wakefield is not None:
             fields.append(self.wakefield)
         fields.extend(self.external_fields)
-        self.auto_dt_bunch = auto_dt_bunch
-        if self.auto_dt_bunch is None:
+        if auto_dt_bunch is not None:
+            self.auto_dt_bunch = auto_dt_bunch
+        else:
             self.auto_dt_bunch = self._get_optimized_dt
         super().__init__(
             length=length,
