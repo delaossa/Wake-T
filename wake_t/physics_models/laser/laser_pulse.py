@@ -8,11 +8,20 @@ profiles, as well as the SummedPulse approach is based on FBPIC
 Authors: Angel Ferran Pousa, Remi Lehe, Manuel Kirchen, Pierre Pelletier.
 
 """
-from typing import Optional
+from typing import Optional, Union, Iterable
 
 import numpy as np
 import scipy.constants as ct
 from scipy.special import genlaguerre, binom
+from scipy.ndimage import gaussian_filter
+try:
+    from lasy.profiles.from_openpmd_profile import FromOpenPMDProfile
+    from lasy.laser import Laser
+    from lasy.utils.laser_utils import field_to_vector_potential
+    lasy_installed = True
+except ImportError:
+    lasy_installed = False
+
 
 from .envelope_solver import evolve_envelope
 from .envelope_solver_non_centered import evolve_envelope_non_centered
@@ -578,3 +587,120 @@ class FlattenedGaussianPulse(LaserPulse):
     def _envelope_function(self, xi, r, z_pos):
         """Complex envelope of the flattened Gaussian beam."""
         return self.summed_pulse.envelope_function(xi, r, z_pos)
+
+
+class OpenPMDPulse(LaserPulse):
+    """Read a laser pulse from an openPMD file.
+
+    This class requires `lasy <https://lasydoc.readthedocs.io>`_ to be
+    installed.
+
+    Parameters
+    ----------
+    path : str
+        Path to the openPMD file or folder containing the laser data.
+    iteration : int
+        Iteration at which to read the laser pulse.
+    field : str, optional
+        Name of the field containing the laser pulse. By default `'E'`.
+    coord : string, optional
+        Coordinate of the field containing the laser pulse.. By default `'x'`.
+    prefix : string, optional
+        Prefix of the openPMD file from which the envelope is read.
+        Only used when envelope=True.
+        The provided iteration is read from <path>/<prefix>_%T.h5.
+    theta : float or None, optional
+        Only used if the openPMD input is in thetaMode geometry.
+        The angle of the plane of observation, with respect to the x axis.
+        By default `0`.
+    smooth_edges : bool, optional
+        Whether to smooth the edges of the laser profile along `r` using a
+        super-Gaussian function of power 8. This is useful when the laser
+        profile in the openPMD file has a sharp edge (e.g., due to the finite
+        width of the domain in `r`). Smoothing this edge can help reduce noise
+        in the simulation. By default `False`.
+    apply_gaussian_filter : bool, optional
+        Whether to apply a Gaussian filter to the laser profile. This is
+        useful, for example, when the openpmd laser pulse comes from a
+        noisy simulation. In this case, applying the filter can improve the
+        stability of the simulation. By default `False`.
+    gaussian_filter_sigma : scalar or sequence of scalars
+        Standard deviation for Gaussian kernel. The standard
+        deviations of the Gaussian filter are given for each axis as a
+        sequence, or as a single number, in which case it is equal for
+        all axes. By default `(5, 0)`, which only smooths along the radial
+        direction.
+
+    Notes
+    -----
+    When the grid of the openPMD laser pulse and the grid of the Wake-T
+    simulation have a different extent or resolution, the original
+    pulse will be linearly interpolated into the Wake-T grid. This is can
+    sometimes lead to numerical issues that manifest as a radial oscillation
+    of the laser pulse (and, as a result, of the plasma wake). To mitigate
+    this, it is important to avoid interpolating along the radial direction.
+    This can be achieved if the ratios between the original and the Wake-T
+    resolution and extent are an integer.
+    """
+    def __init__(
+        self,
+        path: str,
+        iteration: int,
+        field: Optional[str] = 'E',
+        coord: Optional[str] = 'x',
+        prefix: Optional[str] = None,
+        theta: Optional[float] = 0.,
+        smooth_edges: Optional[bool] = False,
+        apply_gaussian_filter: Optional[bool] = False,
+        gaussian_filter_sigma: Optional[Union[int, float, Iterable]] = (5, 0)
+    ) -> None:
+        assert lasy_installed, (
+            "Using an `OpenPMDPulse` requires `lasy` to be installed. "
+            "You can do so with `pip install lasy`."
+        )
+        self.lasy_profile = FromOpenPMDProfile(
+            path=path,
+            iteration=iteration,
+            pol=(1, 0),  # dummy value, currently not needed
+            field=field,
+            coord=coord,
+            prefix=prefix,
+            theta=theta
+        )
+        super().__init__(self.lasy_profile.lambda0, 'linear')
+        self._smooth_edges = smooth_edges
+        self._apply_gaussian_filter = apply_gaussian_filter
+        self._gaussian_filter_sigma = gaussian_filter_sigma
+
+    def _envelope_function(self, xi, r, z_pos):
+        # Create laser
+        t = -xi / ct.c
+        t_min = np.min(t)
+        t_max = np.max(t)
+        t_max -= t_min
+        t_min = 0
+        r_min = np.min(r)
+        r_max = np.max(r)
+        laser = Laser(
+            dim='rt',
+            lo=(r_min, t_min),
+            hi=(r_max, t_max),
+            npoints=(xi.shape[1], xi.shape[0]),
+            profile=self.lasy_profile,
+            n_azimuthal_modes=1
+        )
+        a_env = field_to_vector_potential(laser.grid, laser.profile.omega0)
+
+        # Get 2D slice and change to Wake-T ordering.
+        a_env = a_env[0].T[::-1]
+
+        # Apply Gaussian filter.
+        if self._apply_gaussian_filter:
+            a_env = gaussian_filter(a_env, self._gaussian_filter_sigma)
+
+        # Smooth radial edges of profile.
+        if self._smooth_edges:
+            r_smooth = min(np.max(self.lasy_profile.axes['r']), np.max(r))
+            a_env *= np.exp(- 2 * (r / (r_smooth * 0.85)) ** 8)
+
+        return a_env

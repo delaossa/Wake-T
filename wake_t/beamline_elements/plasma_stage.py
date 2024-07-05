@@ -1,6 +1,6 @@
 """ This module contains the definition of the PlasmaStage class """
 
-from typing import Optional, Union, Callable, List
+from typing import Optional, Union, Callable, List, Literal
 
 import numpy as np
 import scipy.constants as ct
@@ -9,6 +9,9 @@ import wake_t.physics_models.plasma_wakefields as wf
 from wake_t.fields.base import Field
 from .field_element import FieldElement
 from wake_t.particles.particle_bunch import ParticleBunch
+
+
+DtBunchType = Union[float, str, List[Union[float, str]]]
 
 
 wakefield_models = {
@@ -30,12 +33,12 @@ class PlasmaStage(FieldElement):
         Length of the plasma stage in m.
     density : float
         Plasma density in units of m^{-3}.
-    wakefield_model : str or Field
+    wakefield_model : str or Field, optional
         Wakefield model to be used. Possible values are ``'blowout'``,
         ``'custom_blowout'``, ``'focusing_blowout'``, ``'cold_fluid_1d'``
         and ``'quasistatic_2d'``. If ``None``, no wakefields will be
         computed.
-    bunch_pusher : str
+    bunch_pusher : str, optional
         The pusher used to evolve the particle bunches in time within
         the specified fields. Possible values are ``'rk4'`` (Runge-Kutta
         method of 4th order) or ``'boris'`` (Boris method).

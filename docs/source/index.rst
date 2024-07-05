@@ -6,8 +6,8 @@
 Wake-T |release| documentation
 ==============================
 
-.. |travis| image:: https://travis-ci.org/AngelFP/Wake-T.svg?branch=dev
-   :target: https://travis-ci.org/AngelFP/Wake-T
+.. |tests| image:: https://github.com/AngelFP/Wake-T/actions/workflows/test-package.yml/badge.svg
+   :target: https://github.com/AngelFP/Wake-T/actions
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/Wake-T.svg?logo=python&logoColor=white
    :target: https://pypi.org/project/Wake-T/
@@ -18,93 +18,84 @@ Wake-T |release| documentation
 .. |license| image:: https://img.shields.io/github/license/AngelFP/Wake-T
    :target: https://github.com/AngelFP/Wake-T/blob/master/LICENSE
 
-|travis| |codefactor| |PyPI| |license|
+|tests| |codefactor| |PyPI| |license|
 
-.. panels::
-    :card: + intro-card text-center
-    :column: col-lg-6 col-md-6 col-sm-6 col-xs-12 p-2 d-flex
+.. grid:: 1 2 2 2
+    :gutter: 2
 
-    ---
+    .. grid-item-card:: Getting started
+        :text-align: center
 
-    **User guide**
-    ^^^^^^^^^^^^^^
+        :octicon:`book;3em`
 
-    Instructions for getting the code up and running and basic information of
-    the key concepts behind Wake-T.
+        Get the code up and running.
 
-    +++
+        +++
 
-    .. link-button:: user_guide/index
-            :type: ref
-            :text: To the user guide
-            :classes: btn-outline-primary btn-block stretched-link
+        .. button-ref:: getting_started/index
+            :expand:
+            :color: primary
+            :click-parent:
 
-    ---
+            To the guide
 
-    **Tutorials**
-    ^^^^^^^^^^^^
+    .. grid-item-card:: Tutorials
+        :text-align: center
 
-    Step-by-step tutorials covering the functionality of Wake-T.
+        :octicon:`mortar-board;3em`
+              
+        Step-by-step tutorials covering the functionality of Wake-T.
 
-    +++
+        +++
 
-    .. link-button:: tutorials/index
-            :type: ref
-            :text: To the tutorials
-            :classes: btn-outline-primary btn-block stretched-link
+        .. button-ref:: tutorials/index
+            :expand:
+            :color: primary
+            :click-parent:
 
-    ---
+            To the tutorials
 
-    **Examples**
-    ^^^^^^^^^^^^
+    .. grid-item-card:: Examples
+        :text-align: center
 
-    Explore quick examples showcasing how to use the code.
+        :octicon:`light-bulb;3em`
 
-    +++
+        Explore quick examples showcasing how to use the code.
 
-    .. link-button:: examples/index
-            :type: ref
-            :text: To the examples
-            :classes: btn-outline-primary btn-block stretched-link
+        +++
 
-    ---
+        .. button-ref:: examples/index
+            :expand:
+            :color: primary
+            :click-parent:
 
-    **API reference**
-    ^^^^^^^^^^^^^^^^^
+            To the examples
 
-    Detailed documentation of the Wake-T API.
+    .. grid-item-card:: API reference
+        :text-align: center
 
-    +++
+        :octicon:`code;3em`
+        
+        Detailed documentation of the Wake-T API.
 
-    .. link-button:: api/index
-            :type: ref
-            :text: To the reference guide
-            :classes: btn-outline-primary btn-block stretched-link
+        +++
 
-    ---
+        .. button-ref:: api/index
+            :expand:
+            :color: primary
+            :click-parent:
 
-    **Development**
-    ^^^^^^^^^^^^^^^
-
-    Guidelines for contributing to Wake-T.
-
-    +++
-
-    .. link-button:: development
-            :type: ref
-            :text: To the development guide
-            :classes: btn-outline-primary btn-block stretched-link
+            To the reference guide
 
 
 .. toctree::
    :hidden:
    :maxdepth: 4
 
-   user_guide/index
+   getting_started/index
    tutorials/index
    examples/index
    api/index
-   development
 
 
 
