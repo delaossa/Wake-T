@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, Literal, Callable
+from typing import Optional, Union, Callable, List, Literal
 
 import scipy.constants as ct
 
@@ -64,7 +64,8 @@ class FieldElement():
         n_out: Optional[int] = 1,
         name: Optional[str] = 'field element',
         fields: Optional[List[Field]] = [],
-        auto_dt_bunch: Optional[Callable[[ParticleBunch], float]] = None
+        auto_dt_bunch: Optional[Callable[[ParticleBunch], float]] = None,
+        push_bunches_before_diags: Optional[bool] = True,
     ) -> None:
         self.length = length
         self.bunch_pusher = bunch_pusher
@@ -73,6 +74,7 @@ class FieldElement():
         self.name = name
         self.fields = fields
         self.auto_dt_bunch = auto_dt_bunch
+        self.push_bunches_before_diags = push_bunches_before_diags
 
     def track(
         self,

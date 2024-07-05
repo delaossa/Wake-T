@@ -42,25 +42,41 @@ class PlasmaStage(FieldElement):
         The pusher used to evolve the particle bunches in time within
         the specified fields. Possible values are ``'rk4'`` (Runge-Kutta
         method of 4th order) or ``'boris'`` (Boris method).
-    dt_bunch : float
-        The time step for evolving the particle bunches. An adaptive time
-        step can be used if this parameter is set to ``'auto'`` and a
-        ``auto_dt_bunch`` function is provided.
-        By default the automatic function is set to ``dt = T/(10*2*pi)``,
-        where T is the smallest expected betatron period of the bunch
-        along the plasma stage.
-
-    n_out : int
+    dt_bunch : float, str or list of float or str, optional
+        The time step for evolving the particle bunches. If ``'auto'``, it
+        will be automatically set to ``dt = T/(10*2*pi)``, where T is the
+        smallest expected betatron period of the bunch along the plasma
+        stage. A list of values can also be provided. In this case, the list
+        should have the same order as the list of bunches given to the
+        ``track`` method.
+    auto_dt_bunch : callable, optional
+        Function used to determine the adaptive time step for bunches in
+        which the time step is set to ``'auto'``. The function should take
+        solely a ``ParticleBunch`` as argument.
+    push_bunches_before_diags : bool, optional
+        Whether to push the bunches before saving them to the diagnostics.
+        Since the time step of the diagnostics can be different from that
+        of the bunches, it could happen that the bunches appear in the
+        diagnostics as they were at the last push, but not at the actual
+        time of the diagnostics. Setting this parameter to ``True``
+        (default) ensures that an additional push is given to all bunches
+        to evolve them to the diagnostics time before saving.
+        This additional push will always have a time step smaller than
+        the the time step of the bunch, so it has no detrimental impact
+        on the accuracy of the simulation. However, it could make
+        convergence studies more difficult to interpret,
+        since the number of pushes will depend on `n_diags`. Therefore,
+        it is exposed as an option so that it can be disabled if needed.
+    n_out : int, optional
         Number of times along the stage in which the particle distribution
         should be returned (A list with all output bunches is returned
         after tracking).
     name : str
         Name of the plasma stage. This is only used for displaying the
         progress bar during tracking. By default, ``'Plasma stage'``.
-    auto_dt_bunch : callable, optional
-        Function used to determine the adaptive time step for bunches in
-        which the time step is set to ``'auto'``. The function should take
-        solely a ``ParticleBunch`` as argument.
+    external_fields : list of Field, optional
+        A list of fields to apply to the particle bunches in
+        addition to the plasma wakefields.
     **model_params
         Keyword arguments which will be given to the wakefield model. Each
         model requires a different set of parameters. See the documentation
@@ -78,12 +94,13 @@ class PlasmaStage(FieldElement):
         length: float,
         density: Union[float, Callable[[float], float]],
         wakefield_model: Optional[str] = 'simple_blowout',
-        bunch_pusher: Optional[str] = 'rk4',
-        dt_bunch: Optional[Union[float, str]] = 'auto',
+        bunch_pusher: Optional[Literal['boris', 'rk4']] = 'boris',
+        dt_bunch: Optional[DtBunchType] = 'auto',
+        auto_dt_bunch: Optional[Callable[[ParticleBunch], float]] = None,
+        push_bunches_before_diags: Optional[bool] = True,
         n_out: Optional[int] = 1,
         name: Optional[str] = 'Plasma stage',
         external_fields: Optional[List[Field]] = [],
-        auto_dt_bunch: Optional[Callable[[ParticleBunch], float]] = None,
         **model_params
     ) -> None:
         self.density = self._get_density_profile(density)
@@ -104,8 +121,8 @@ class PlasmaStage(FieldElement):
             n_out=n_out,
             name=name,
             fields=fields,
-            # auto_dt_bunch=self._get_optimized_dt
-            auto_dt_bunch=self.auto_dt_bunch
+            auto_dt_bunch=self.auto_dt_bunch,
+            push_bunches_before_diags=push_bunches_before_diags,
         )
 
     def _get_density_profile(self, density):
