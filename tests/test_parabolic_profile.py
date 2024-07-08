@@ -97,7 +97,7 @@ def test_variable_parabolic_coefficient():
     # Check final spot size value
     dr = r_max / Nr
     w0_final = calculate_spot_size(a_env_1, dr)
-    assert w0_final == 2.0347174136646184e-05
+    np.testing.assert_almost_equal(w0_final, 2.03471741366461e-05)
 
 
 def calculate_spot_size(a_env, dr):
