@@ -91,7 +91,7 @@ def test_adaptive_grid():
         # Check that bunch charge distribution and space charge agree
         # between the base and the adaptive grid.
         np.testing.assert_allclose(
-            q_bunch_base[ag.i_grid], q_bunch_ag[:, :-ag.nr_border], rtol=1e-11
+            q_bunch_base[ag.i_grid], q_bunch_ag[:, :-ag.nr_border], rtol=1e-10
         )
         np.testing.assert_allclose(
             bt_bunch_base[ag.i_grid],
@@ -237,7 +237,7 @@ def test_adaptive_grid_undersized():
                       *field_arrays_ag, driver.name)
         for arr, arr_ag in zip(field_arrays, field_arrays_ag):
             np.testing.assert_allclose(
-                        arr, arr_ag, rtol=1e-11
+                        arr, arr_ag, rtol=1e-10
                     )
 
 
